@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smarte Skjema - Sykehuset Telemark</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        .custom-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 12px;
+            border-radius: 6px;
+            outline: none;
+        }
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 6px;
+            height: 32px;
+            background: #001a33;
+            border-radius: 2px;
+            cursor: pointer;
+            box-shadow: 0 0 0 2px white;
+        }
+        .custom-slider::-moz-range-thumb {
+            width: 6px;
+            height: 32px;
+            background: #001a33;
+            border-radius: 2px;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- TEMA DEFINISJONER ---
+        const themes = {
+          checkware: {
+            appBackground: 'bg-[#f4f5f6] font-sans text-[#333333]',
+            container: 'max-w-3xl mx-auto p-4 sm:p-8',
+            card: 'bg-white border border-[#cccccc] shadow-sm mb-6',
+            cardHeader: 'bg-white border-b border-[#cccccc] text-[#222222] p-5 md:p-6 text-xl md:text-2xl font-semibold',
+            cardBody: 'p-5 md:p-8',
+            buttonPrimary: 'bg-[#0056b3] text-white px-6 py-2.5 hover:bg-[#004494] font-medium text-lg rounded-sm focus:ring-4 focus:ring-[#0056b3]/30 transition-colors',
+            buttonSecondary: 'bg-white text-[#333333] px-6 py-2.5 hover:bg-gray-50 border border-[#767676] font-medium text-lg rounded-sm focus:ring-4 focus:ring-gray-200 transition-colors',
+            input: 'border border-[#767676] p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#0056b3] focus:border-[#0056b3] rounded-sm text-lg',
+            radio: 'h-6 w-6 text-[#0056b3] border-[#767676] focus:ring-[#0056b3] cursor-pointer',
+            progressBarBackground: 'bg-[#e5e5e5] h-2.5 w-full rounded-sm mt-2',
+            progressBarFill: 'bg-[#0056b3] h-full rounded-sm',
+            alertDanger: 'bg-[#fbeaea] border-l-4 border-[#d12c2c] text-[#333333] p-5 font-medium',
+            table: 'w-full border-collapse text-left',
+            th: 'border-b-2 border-[#333333] py-3 px-2 text-sm font-bold',
+            td: 'border-b border-[#cccccc] py-3 px-2 text-base',
+          },
+          material: {
+            appBackground: 'bg-slate-50 font-sans text-slate-800',
+            container: 'max-w-4xl mx-auto p-4 sm:p-6 lg:p-8',
+            card: 'bg-white rounded-3xl shadow-sm border border-slate-100 mb-6 overflow-hidden',
+            cardHeader: 'bg-white text-slate-800 p-6 pb-2 text-2xl font-medium tracking-tight',
+            cardBody: 'p-6 pt-2',
+            buttonPrimary: 'bg-indigo-600 text-white px-6 py-3 rounded-full hover:bg-indigo-700 shadow-md transition-all font-medium',
+            buttonSecondary: 'bg-indigo-50 text-indigo-700 px-6 py-3 rounded-full hover:bg-indigo-100 transition-all font-medium',
+            input: 'bg-slate-50 border-b-2 border-slate-300 p-3 w-full focus:outline-none focus:border-indigo-600 rounded-t-md transition-colors',
+            radio: 'h-5 w-5 text-indigo-600 border-slate-300 focus:ring-indigo-600 cursor-pointer',
+            progressBarBackground: 'bg-slate-200 h-2 w-full rounded-full overflow-hidden',
+            progressBarFill: 'bg-indigo-600 h-full rounded-full transition-all duration-500 ease-out',
+            alertDanger: 'bg-red-50 text-red-900 p-5 rounded-2xl flex items-start gap-3 shadow-sm',
+            table: 'w-full text-left border-collapse',
+            th: 'border-b border-slate-200 py-4 px-2 text-sm font-medium text-slate-500',
+            td: 'border-b border-slate-100 py-4 px-2 text-slate-800',
+          },
+          helsenorge: {
+            appBackground: 'bg-[#f1f1f1] font-sans text-[#212121]',
+            container: 'max-w-3xl mx-auto p-4 md:p-8 lg:p-10',
+            card: 'bg-white rounded-md shadow-sm mb-6',
+            cardHeader: 'bg-white border-b-2 border-[#f1f1f1] text-[#212121] p-6 text-2xl font-bold tracking-tight',
+            cardBody: 'p-6 md:p-8',
+            buttonPrimary: 'bg-[#004f71] text-white px-8 py-3 font-semibold text-lg rounded-md hover:bg-[#003a54] focus:ring-4 focus:ring-yellow-400 focus:outline-none transition-colors border-2 border-transparent',
+            buttonSecondary: 'bg-white text-[#004f71] px-8 py-3 font-semibold text-lg rounded-md hover:bg-[#eef4f8] focus:ring-4 focus:ring-yellow-400 focus:outline-none transition-colors border-2 border-[#004f71]',
+            input: 'border-2 border-[#707070] p-4 w-full focus:outline-none focus:border-[#004f71] focus:ring-2 focus:ring-[#004f71] rounded-md text-lg transition-shadow',
+            radio: 'h-8 w-8 text-[#004f71] border-2 border-[#707070] focus:ring-[#004f71] focus:ring-2 cursor-pointer',
+            progressBarBackground: 'bg-[#e5e5e5] h-3 w-full rounded-md mt-2 overflow-hidden',
+            progressBarFill: 'bg-[#004f71] h-full rounded-md',
+            alertDanger: 'bg-[#ffebee] border-l-4 border-[#c62828] text-[#212121] p-5 font-medium rounded-r-md',
+            table: 'w-full text-left border-collapse',
+            th: 'border-b-2 border-[#212121] py-3 px-2 text-sm font-bold',
+            td: 'border-b border-[#e5e5e5] py-4 px-2 text-lg',
+          }
+        };
+
+        const getPainInfo = (score) => {
+          if (score === 0) return { text: 'Ingen', color: 'text-slate-600' };
+          if (score <= 3) return { text: 'Mild', color: 'text-emerald-700' };
+          if (score <= 6) return { text: 'Moderat', color: 'text-[#b47b22]' }; // Gullfarge
+          if (score <= 8) return { text: 'Sterk', color: 'text-orange-600' };
+          return { text: 'Verst', color: 'text-red-700' };
+        };
+
+        function App() {
+          const [theme, setTheme] = useState('checkware');
+          const [view, setView] = useState('patient');
+          const t = themes[theme];
+
+          const [answers, setAnswers] = useState({
+            hovedfokus: '',
+            smerteScore: 5,
+            endringHelse: null,
+            endringHelseTekst: '',
+            trengerResept: false,
+            trengerTolk: false,
+          });
+
+          return (
+            <div className={`min-h-screen ${t.appBackground} pb-20 transition-colors duration-300`}>
+              <div className="bg-slate-900 text-white p-4 sticky top-0 z-50 shadow-lg">
+                <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-sm font-semibold tracking-wider text-slate-300 flex items-center gap-2">
+                    <span className="text-xl">⚙️</span> DEMO-VISNING
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    <select 
+                      className="bg-slate-800 border border-slate-700 text-white text-sm rounded p-2 focus:ring-2 focus:ring-white outline-none"
+                      value={theme}
+                      onChange={(e) => setTheme(e.target.value)}
+                    >
+                      <option value="checkware">Tema: CheckWare (Klassisk Sykehus)</option>
+                      <option value="helsenorge">Tema: Helsenorge (Offentlig Standard)</option>
+                      <option value="material">Tema: Material 3 (Moderne UI)</option>
+                    </select>
+                    
+                    <div className="flex bg-slate-800 rounded p-1">
+                      <button onClick={() => setView('patient')} className={`px-4 py-1 text-sm rounded transition-colors ${view === 'patient' ? 'bg-indigo-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Pasient (Skjema)</button>
+                      <button onClick={() => setView('doctor')} className={`px-4 py-1 text-sm rounded transition-colors ${view === 'doctor' ? 'bg-indigo-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Behandler (Dashboard)</button>
+                      <button onClick={() => setView('workflow')} className={`px-4 py-1 text-sm rounded transition-colors ${view === 'workflow' ? 'bg-indigo-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Strategi & Arbeidsflyt</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={t.container}>
+                {view === 'patient' && <PatientForm theme={theme} t={t} answers={answers} setAnswers={setAnswers} />}
+                {view === 'doctor' && <DoctorDashboard theme={theme} t={t} answers={answers} />}
+                {view === 'workflow' && <WorkflowSketch theme={theme} t={t} />}
+              </div>
+            </div>
+          );
+        }
+
+        function PatientForm({ theme, t, answers, setAnswers }) {
+          const [step, setStep] = useState(1);
+          const totalSteps = 4;
+
+          const handleNext = () => setStep(prev => Math.min(prev + 1, totalSteps));
+          const handlePrev = () => setStep(prev => Math.max(prev - 1, 1));
+          const handleComplete = () => setStep(5);
+
+          const updateAnswer = (key, value) => setAnswers(prev => ({ ...prev, [key]: value }));
+
+          if (step === 5) {
+            return (
+              <div className={`mt-8 ${t.card}`}>
+                {theme === 'checkware' && <div className={t.cardHeader}>Kvittering</div>}
+                <div className={`${t.cardBody} text-center py-12`}>
+                  <div className="text-5xl mb-4">✅</div>
+                  <h2 className={theme === 'material' ? 'text-3xl font-medium mb-4' : 'text-2xl font-bold mb-4'}>Takk for dine svar!</h2>
+                  <p className="text-gray-600 max-w-md mx-auto mb-6">Svarene dine er lagret trygt og sendt direkte til din behandler. Dette vil bidra til at dere får bedre tid til det som er viktig for deg i konsultasjonen.</p>
+                  <button onClick={() => setStep(1)} className={t.buttonSecondary}>Start på nytt (For testformål)</button>
+                </div>
+              </div>
+            );
+          }
+
+          const isRedFlag = answers.smerteScore >= 9;
+
+          return (
+            <div className="mt-8 animate-fade-in">
+              <div className="mb-6">
+                <div className="flex justify-between text-sm mb-2 text-gray-500 font-medium">
+                  <span>Steg {step} av {totalSteps}</span>
+                  <span>{Math.round((step / totalSteps) * 100)}% fullført</span>
+                </div>
+                <div className={t.progressBarBackground}>
+                  <div className={t.progressBarFill} style={{ width: `${(step / totalSteps) * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className={t.card}>
+                {theme === 'checkware' && <div className={t.cardHeader}>{step === 1 && 'Velkommen til forberedelse'}{step === 2 && 'Kliniske helseopplysninger'}{step === 3 && 'Praktiske avklaringer'}{step === 4 && 'Oppsummering og innsending'}</div>}
+                {theme === 'material' && <div className={t.cardHeader}>{step === 1 && 'Klar for timen din?'}{step === 2 && 'Hvordan har du det?'}{step === 3 && 'Noe praktisk vi bør vite?'}{step === 4 && 'Se over svarene dine'}</div>}
+
+                <div className={t.cardBody}>
+                  {step === 1 && (
+                    <div className="space-y-4 text-lg">
+                      <p>Hei Kari!</p>
+                      <p>For at vi skal kunne gi deg best mulig oppfølging i timen din <strong>mandag 9. november kl. 10:15</strong> (om 7 dager), ber vi deg svare på noen korte spørsmål.</p>
+                      <div className="bg-blue-50 p-4 rounded-lg text-blue-900 border border-blue-100 mt-4">
+                        <ul className="list-disc pl-5 space-y-2">
+                          <li>Det tar ca. 2 minutter.</li>
+                          <li>Informasjonen lagres trygt i din journal.</li>
+                          <li>Svarene leses kun av din behandler for å forberede timen.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 2 && (
+                    <div className="space-y-8">
+                      <div>
+                        <label className="block font-semibold text-lg mb-3">Hva er det aller viktigste du ønsker å ta opp i dagens konsultasjon?</label>
+                        <textarea className={t.input} rows="3" placeholder="Kort beskrivelse (valgfritt)..." value={answers.hovedfokus} onChange={(e) => updateAnswer('hovedfokus', e.target.value)} />
+                        <p className="text-sm text-gray-500 mt-2">Dette hjelper legen med å prioritere tiden riktig.</p>
+                      </div>
+
+                      <div className="border-t border-gray-200 pt-6">
+                        <label className="block font-semibold text-lg mb-4">På en skala fra 0 til 10, hvor sterke smerter har du hatt den siste uken?</label>
+                        
+                        {theme === 'checkware' ? (
+                          <div className="flex items-center justify-between gap-1 w-full overflow-x-auto pb-2">
+                            {[0,1,2,3,4,5,6,7,8,9,10].map(num => (
+                              <label key={num} className="flex flex-col items-center justify-center gap-1 sm:gap-2 cursor-pointer py-2 sm:py-3 flex-1 min-w-[2.5rem] border border-gray-300 bg-gray-50 hover:bg-gray-200 transition-colors">
+                                <input type="radio" name="smerte" value={num} checked={answers.smerteScore === num} onChange={() => updateAnswer('smerteScore', num)} className={t.radio} />
+                                <span className="font-medium text-gray-800">{num}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-4 animate-fade-in">
+                            <div className="p-8 sm:p-12 rounded-xl border bg-white border-gray-200 shadow-sm">
+                              <div className="flex flex-col items-center">
+                                <div className={`text-6xl sm:text-7xl font-light ${getPainInfo(answers.smerteScore).color} transition-colors duration-300`}>{answers.smerteScore}</div>
+                                <div className={`text-xl sm:text-2xl font-semibold mt-1 mb-8 ${getPainInfo(answers.smerteScore).color} transition-colors duration-300`}>{getPainInfo(answers.smerteScore).text}</div>
+                                <div className="w-full relative px-2 max-w-xl mx-auto">
+                                  <input 
+                                    type="range" min="0" max="10" step="1" value={answers.smerteScore} onChange={(e) => updateAnswer('smerteScore', parseInt(e.target.value))}
+                                    className="custom-slider w-full cursor-pointer relative z-10"
+                                    style={{ background: `linear-gradient(to right, #001a33 ${(answers.smerteScore / 10) * 100}%, #f0f2f5 ${(answers.smerteScore / 10) * 100}%)` }}
+                                  />
+                                  <div className="flex justify-between text-sm text-gray-500 mt-4 font-medium"><span>0</span><span>5</span><span>10</span></div>
+                                </div>
+                                <div className="flex flex-wrap justify-center gap-2 mt-8">
+                                  {[{ label: 'Ingen', val: 0 }, { label: 'Mild', val: 2 }, { label: 'Moderat', val: 5 }, { label: 'Sterk', val: 8 }, { label: 'Verst', val: 10 }].map(btn => (
+                                    <button key={btn.label} onClick={() => updateAnswer('smerteScore', btn.val)} className={`px-4 sm:px-6 py-2.5 rounded-lg border text-base sm:text-lg transition-all ${getPainInfo(answers.smerteScore).text === btn.label ? 'bg-slate-100 border-slate-300 font-semibold text-slate-800' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'}`}>{btn.label}</button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-[#eef1f4] rounded-lg p-4 sm:p-5 flex items-start gap-4">
+                              <svg className="w-6 h-6 text-[#001a33] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                              <span className="text-base sm:text-lg text-slate-800 font-medium">Tenk på en helt vanlig dag, ikke den verste eller beste.</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="border-t border-gray-200 pt-6">
+                        <label className="block font-semibold text-lg mb-4">
+                          Har det skjedd vesentlige endringer i helsen din siden sist?
+                          <span className="block text-sm font-normal text-gray-500 mt-1">F.eks. innlagt på sykehus, byttet fastlege, eller startet på nye medisiner.</span>
+                        </label>
+                        <div className="flex gap-6 mb-4">
+                          <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                            <input type="radio" name="endringHelse" checked={answers.endringHelse === true} onChange={() => updateAnswer('endringHelse', true)} className={t.radio} />
+                            <span className="text-lg">Ja</span>
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                            <input type="radio" name="endringHelse" checked={answers.endringHelse === false} onChange={() => updateAnswer('endringHelse', false)} className={t.radio} />
+                            <span className="text-lg">Nei</span>
+                          </label>
+                        </div>
+                        {answers.endringHelse && (
+                          <div className="animate-fade-in mt-2 bg-blue-50 p-4 border border-blue-100 rounded">
+                            <label className="block text-sm font-semibold mb-2">Kan du kort beskrive hva som har skjedd?</label>
+                            <textarea className={t.input} rows="2" placeholder="F.eks. Fikk nye blodtrykksmedisiner av fastlegen..." value={answers.endringHelseTekst} onChange={(e) => updateAnswer('endringHelseTekst', e.target.value)} />
+                          </div>
+                        )}
+                      </div>
+
+                      {isRedFlag && (
+                        <div className={`${t.alertDanger}`}>
+                          {theme === 'material' && <span className="text-3xl mt-1">⚠️</span>}
+                          <div>
+                            <h4 className="font-bold text-lg mb-1">Trenger du akutt helsehjelp?</h4>
+                            <p>Du har angitt et svært høyt smertenivå. Dette skjemaet leses ikke umiddelbart av helsepersonell.</p>
+                            <p className="mt-2">Ved akutt forverring eller behov for umiddelbar hjelp, ring din fastlege, <strong>legevakt (116 117)</strong> eller <strong>nødnummer (113)</strong>.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {step === 3 && (
+                    <div className="space-y-6">
+                      <div className="bg-gray-50 p-4 rounded-lg mb-6"><p className="text-gray-700">Disse opplysningene går direkte til våre helsesekretærer, slik at vi kan tilrettelegge besøket ditt og spare tid på venterommet.</p></div>
+                      <label className={`flex items-center gap-4 p-4 ${theme === 'material' ? 'bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-300' : 'bg-gray-50 hover:bg-gray-100 border border-gray-300'} cursor-pointer transition-all`}>
+                        <input type="checkbox" className={`${t.radio} w-6 h-6`} checked={answers.trengerResept} onChange={(e) => updateAnswer('trengerResept', e.target.checked)} />
+                        <div className="text-lg">Jeg har behov for fornyelse av resepter.</div>
+                      </label>
+                      <label className={`flex items-center gap-4 p-4 ${theme === 'material' ? 'bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-300' : 'bg-gray-50 hover:bg-gray-100 border border-gray-300'} cursor-pointer transition-all`}>
+                        <input type="checkbox" className={`${t.radio} w-6 h-6`} checked={answers.trengerTolk} onChange={(e) => updateAnswer('trengerTolk', e.target.checked)} />
+                        <div className="text-lg">Jeg har behov for tolk under konsultasjonen.</div>
+                      </label>
+                    </div>
+                  )}
+
+                  {step === 4 && (
+                    <div className="space-y-6">
+                      <p className="text-lg font-medium mb-4">Se over svarene dine før du sender inn:</p>
+                      <div className="bg-blue-50 p-5 rounded-lg border border-blue-100 shadow-sm">
+                        <h3 className="font-bold text-blue-900 mb-4 border-b border-blue-200 pb-2 flex items-center gap-2"><span>🧑‍⚕️</span> Går til behandler (Lege/Sykepleier)</h3>
+                        <div className="space-y-3">
+                          <div><span className="text-gray-600 block text-sm">Hovedfokus for timen:</span><span className="font-medium text-lg">{answers.hovedfokus || <span className="italic text-gray-500">Ikke besvart</span>}</span></div>
+                          <div><span className="text-gray-600 block text-sm">Smertescore (siste uke):</span><span className="font-bold text-xl">{answers.smerteScore} / 10</span></div>
+                          <div><span className="text-gray-600 block text-sm">Endringer i helse siden sist:</span><span className="font-medium text-lg">{answers.endringHelse === true ? `Ja: ${answers.endringHelseTekst}` : answers.endringHelse === false ? 'Nei' : 'Ikke besvart'}</span></div>
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 className="font-bold text-gray-800 mb-4 border-b border-gray-300 pb-2 flex items-center gap-2"><span>💼</span> Går til helsesekretær (Før timen)</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center max-w-sm"><span className="text-gray-600">Trenger reseptfornyelse:</span><span className="font-bold">{answers.trengerResept ? 'Ja' : 'Nei'}</span></div>
+                          <div className="flex justify-between items-center max-w-sm"><span className="text-gray-600">Trenger tolk:</span><span className="font-bold">{answers.trengerTolk ? 'Ja' : 'Nei'}</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className={`p-4 sm:p-6 border-t ${theme === 'material' ? 'border-slate-100 bg-slate-50' : 'border-gray-300 bg-gray-200'} flex justify-between items-center`}>
+                  {step > 1 ? <button onClick={handlePrev} className={t.buttonSecondary}>Tilbake</button> : <div />}
+                  {step < totalSteps ? <button onClick={handleNext} className={t.buttonPrimary}>Neste</button> : <button onClick={handleComplete} className={t.buttonPrimary}>Send inn skjema</button>}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function DoctorDashboard({ theme, t, answers }) {
+          const history = [
+            { date: '12.01.2026', score: 8, notes: 'Første konsultasjon. Oppstart medisin.' },
+            { date: '15.05.2026', score: 6, notes: 'Noe bedring, men bivirkninger.' },
+            { date: 'I dag (Skjema)', score: answers.smerteScore, notes: 'Utfylt hjemmefra via digital kartlegging' }
+          ];
+
+          return (
+            <div className="mt-4 animate-fade-in space-y-6">
+              <div className={`${t.card} ${theme === 'material' ? '' : 'border-l-8 border-l-blue-600'}`}>
+                <div className={`${t.cardBody} flex flex-col md:flex-row justify-between md:items-center bg-white gap-4`}>
+                  <div className="flex items-center gap-4">
+                    {theme === 'material' && (
+                      <div className="w-16 h-16 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-2xl font-bold shadow-sm shrink-0">
+                        KN
+                      </div>
+                    )}
+                    <div><h1 className="text-3xl font-bold text-gray-900">Kari Nordmann</h1><p className="text-gray-600 text-lg mt-1">Født: 14.03.1975 (51 år) | Journalnr: 123456</p></div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2"><span className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md text-sm font-bold border border-green-300 flex items-center gap-2 shadow-sm"><span className="w-2 h-2 rounded-full bg-green-500"></span>Digitalt skjema mottatt</span><span className="text-xs text-gray-500">Mottatt: I dag kl 08:14</span></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className={t.card}>
+                    {theme === 'checkware' && <div className={t.cardHeader}>Kartlegging før time (Klinisk)</div>}
+                    {theme === 'material' && <div className={t.cardHeader}>Pasientens forberedelse</div>}
+                    <div className={t.cardBody}>
+                      {answers.smerteScore >= 8 && <div className={`mb-6 ${t.alertDanger}`}><strong>Klinisk varsel:</strong> Pasienten har angitt en uvanlig høy smertescore ({answers.smerteScore}/10) i forkant av timen.</div>}
+                      <div className="space-y-6">
+                        <div><h4 className="text-sm text-gray-500 uppercase font-bold tracking-wider mb-2">Hva pasienten ønsker å ta opp</h4><div className={`p-4 rounded-lg border ${theme === 'material' ? 'bg-slate-50 border-slate-200' : 'bg-gray-50 border-gray-300'} text-lg italic text-gray-800`}>"{answers.hovedfokus || 'Ingen fritekst angitt.'}"</div></div>
+                        <div>
+                          <h4 className="text-sm text-gray-500 uppercase font-bold tracking-wider mb-2">Nylige endringer i helse</h4>
+                          <div className={`p-4 rounded-lg border ${theme === 'material' ? 'bg-indigo-50 border-indigo-100' : 'bg-blue-50 border-blue-200'} text-gray-800`}>
+                            {answers.endringHelse === true ? <p><span className="font-bold text-red-700 mr-2">JA:</span> {answers.endringHelseTekst || 'Pasienten har angitt ja, men ikke utdypet.'}</p> : answers.endringHelse === false ? <p><span className="font-bold text-green-700 mr-2">NEI:</span> Ingen vesentlige endringer siden sist.</p> : <p className="italic text-gray-500">Pasienten har ikke besvart dette spørsmålet.</p>}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm text-gray-500 uppercase font-bold tracking-wider mb-2">Smertescore (Siste 7 dager)</h4>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-baseline gap-1"><span className="text-5xl font-black text-blue-900">{answers.smerteScore}</span><span className="text-xl text-gray-400 font-medium">/10</span></div>
+                            <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden ml-4 max-w-xs shadow-inner"><div className={`h-full transition-all duration-1000 ${answers.smerteScore > 7 ? 'bg-red-500' : answers.smerteScore > 4 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${answers.smerteScore * 10}%` }}></div></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={t.card}>
+                    {theme === 'checkware' && <div className={t.cardHeader}>Utvikling over tid</div>}
+                    {theme === 'material' && <div className={t.cardHeader}>Historikk & Trend</div>}
+                    <div className={t.cardBody}>
+                      <div className="overflow-x-auto">
+                        <table className={t.table}>
+                          <thead><tr><th className={t.th}>Dato</th><th className={t.th}>Score</th><th className={t.th}>Kilde / Notat</th></tr></thead>
+                          <tbody>{history.map((row, idx) => <tr key={idx} className={idx === history.length -1 ? 'bg-blue-50 font-medium' : ''}><td className={t.td}>{row.date}</td><td className={t.td}><span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold shadow-sm ${row.score > 7 ? 'bg-red-500' : row.score > 4 ? 'bg-yellow-500' : 'bg-green-500'}`}>{row.score}</span></td><td className={t.td}>{row.notes}</td></tr>)}</tbody>
+                        </table>
+                      </div>
+                      <div className="mt-4 flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-200">
+                        <span className="text-sm font-semibold text-gray-600">Klinisk Trend:</span>
+                        <span className={`text-sm font-bold flex items-center gap-1 ${answers.smerteScore < history[1].score ? 'text-green-600' : answers.smerteScore > history[1].score ? 'text-red-600' : 'text-yellow-600'}`}>{answers.smerteScore < history[1].score ? '⬇ Positiv (Bedring)' : answers.smerteScore > history[1].score ? '⬆ Negativ (Forverring)' : '➡ Uendret'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className={`${t.card} ${theme === 'material' ? '' : 'border-t-4 border-t-yellow-500'}`}>
+                    {theme === 'checkware' && <div className={t.cardHeader}>Logistikk (Delegert til Sekretær)</div>}
+                    {theme === 'material' && <div className={t.cardHeader}>Praktisk info</div>}
+                    <div className={t.cardBody}>
+                      <p className="text-xs text-gray-500 mb-4 uppercase font-bold">Disse punktene er allerede rutet til resepsjonen.</p>
+                      <ul className="space-y-4">
+                        <li className="flex items-center gap-3"><div className={`w-10 h-10 flex items-center justify-center rounded-lg shadow-sm ${answers.trengerResept ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'bg-gray-100 text-gray-400'}`}>💊</div><span className={`text-lg ${answers.trengerResept ? 'font-bold text-gray-900' : 'text-gray-400 line-through'}`}>Reseptfornyelse</span></li>
+                        <li className="flex items-center gap-3"><div className={`w-10 h-10 flex items-center justify-center rounded-lg shadow-sm ${answers.trengerTolk ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'bg-gray-100 text-gray-400'}`}>🌐</div><span className={`text-lg ${answers.trengerTolk ? 'font-bold text-gray-900' : 'text-gray-400 line-through'}`}>Behov for tolk</span></li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  {/* CLEAN KPI BOKS UTEN GRELLE FARGER */}
+                  <div className={t.card}>
+                     <div className={t.cardHeader}>📊 Effektindikatorer (Pilotgruppe)</div>
+                     <div className={t.cardBody}>
+                        <div className="space-y-5">
+                           <div>
+                             <div className="flex justify-between text-gray-700 mb-1 text-sm font-medium"><span>Svarprosent</span><span className="font-bold text-gray-900">78%</span></div>
+                             <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                                <div className="bg-blue-600 h-full rounded-full" style={{ width: '78%' }}></div>
+                             </div>
+                           </div>
+                           
+                           <div className="pt-4 border-t border-gray-200">
+                              <p className="text-gray-600 text-sm font-medium">Gj.snittlig spart admin-tid per time:</p>
+                              <p className="text-2xl font-bold text-gray-900 mt-1">4.5 min</p>
+                           </div>
+
+                           <div className="pt-4 border-t border-gray-200">
+                              <p className="text-gray-600 text-sm font-medium">Pasientopplevelse (Touchskjerm utgang):</p>
+                              <p className="text-lg font-bold text-gray-900 mt-1">😊 92% fornøyd</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function WorkflowSketch({ theme, t }) {
+          return (
+            <div className="mt-8 animate-fade-in space-y-6">
+              <div className={t.card}>
+                <div className={`${t.cardHeader} ${theme === 'material' ? 'bg-indigo-50 text-indigo-900 border-b-0' : 'bg-gray-100 text-gray-800'}`}>Forankring og risikostyring</div>
+                <div className={`${t.cardBody} space-y-4`}>
+                  <div className={`p-4 md:p-6 rounded-lg border ${theme === 'material' ? 'bg-white border-slate-200 shadow-sm' : 'bg-gray-50 border-gray-200'}`}>
+                     <h3 className={`font-bold uppercase text-sm tracking-wider mb-4 border-b pb-2 ${theme === 'material' ? 'text-indigo-600 border-indigo-100' : 'text-gray-700 border-gray-300'}`}>1. Hva trenger jeg å vite?</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-base">
+                       <div><span className="font-bold block text-gray-900 mb-1">Tidsbruk</span> <span className="text-gray-600 text-sm">Hvor mye tid har behandler? Dette styrer maks lengde på skjemaet.</span></div>
+                       <div><span className="font-bold block text-gray-900 mb-1">Medisinsk verdi</span> <span className="text-gray-600 text-sm">Identifisere de 2–3 spørsmålene som gir <i>faktisk</i> nytte. Unngå overflødig informasjon.</span></div>
+                       <div><span className="font-bold block text-gray-900 mb-1">Pasientutvalg</span> <span className="text-gray-600 text-sm">Rutiner for innkalling og utvelgelse av hvem som mottar skjemaet.</span></div>
+                     </div>
+                  </div>
+                  <div className={`p-4 md:p-6 rounded-lg border ${theme === 'material' ? 'bg-white border-slate-200 shadow-sm' : 'bg-gray-50 border-gray-200'}`}>
+                     <h3 className={`font-bold uppercase text-sm tracking-wider mb-4 border-b pb-2 ${theme === 'material' ? 'text-indigo-600 border-indigo-100' : 'text-gray-700 border-gray-300'}`}>2. Hvem vil jeg involvere?</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-base">
+                       <div><span className="font-bold block text-gray-900 mb-1">Behandlere (Leger)</span> <span className="text-gray-600 text-sm">Avklare faglig verdi og reell kapasitet i en travel poliklinikk.</span></div>
+                       <div><span className="font-bold block text-gray-900 mb-1">Helsesekretærer</span> <span className="text-gray-600 text-sm">Kartlegge praktiske rutiner på venterommet og systemintegrasjon.</span></div>
+                       <div><span className="font-bold block text-gray-900 mb-1">Brukermedvirkning</span> <span className="text-gray-600 text-sm">Sikre klarspråk og et intuitivt, universelt design for pasientene.</span></div>
+                     </div>
+                  </div>
+                  <div className={`p-4 md:p-6 rounded-lg border ${theme === 'material' ? 'bg-white border-slate-200 shadow-sm' : 'bg-gray-50 border-gray-200'}`}>
+                     <h3 className={`font-bold uppercase text-sm tracking-wider mb-4 border-b pb-2 ${theme === 'material' ? 'text-indigo-600 border-indigo-100' : 'text-gray-700 border-gray-300'}`}>3. ROS og pasientsikkerhet</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-base">
+                       <div><span className="font-bold block text-gray-900 mb-1">Håndtering av "Røde flagg"</span> <span className="text-gray-600 text-sm">Tydelig henvisning til 113/legevakt ved kritiske symptomer (skjemaet leses ikke i sanntid).</span></div>
+                       <div><span className="font-bold block text-gray-900 mb-1">Målrettet informasjonsdeling</span> <span className="text-gray-600 text-sm">Sensitive helseopplysninger til lege. Praktiske behov sendes til sekretær.</span></div>
+                       <div><span className="font-bold block text-gray-900 mb-1">Digitalt utenforskap</span> <span className="text-gray-600 text-sm">Fjerne barrierer. Alltid sikre analogt alternativ (f.eks. hjelp på venterommet).</span></div>
+                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={t.card}>
+                <div className={`${t.cardHeader} bg-blue-900 !text-white`}>Arbeidsflyt: Fra bestilling til konsultasjon</div>
+                <div className={`${t.cardBody} p-8`}>
+                  <div className="relative border-l-4 border-gray-200 ml-4 md:ml-12 space-y-12 pb-8">
+                    <div className="relative"><div className="absolute -left-10 md:-left-14 bg-blue-600 h-6 w-6 rounded-full border-4 border-white shadow"></div><div className="pl-4"><span className="text-sm font-bold text-blue-600 uppercase tracking-wider">7 dager før</span><h3 className="text-xl font-bold mt-1">Utsendelse via SMS/E-post</h3><p className="text-gray-600 mt-2">Pasienten mottar en sikker lenke. Skjemaet har et trinnvis design for å gjøre det enkelt å fylle ut. 7 dager i forkant gjør at pasienter ikke rekker å glemme skjemaet, og symptomene som beskrives er oppdaterte.</p></div></div>
+                    <div className="relative"><div className="absolute -left-10 md:-left-14 bg-yellow-500 h-6 w-6 rounded-full border-4 border-white shadow"></div><div className="pl-4"><span className="text-sm font-bold text-yellow-600 uppercase tracking-wider">2-3 dager før</span><h3 className="text-xl font-bold mt-1">Oppfølging ved manglende svar</h3><p className="text-gray-600 mt-2">Dersom pasienten ikke har svart på skjemaet, sendes en automatisk og vennlig påminnelse.</p></div></div>
+                    <div className="relative"><div className="absolute -left-10 md:-left-14 bg-purple-600 h-6 w-6 rounded-full border-4 border-white shadow"></div><div className="pl-4"><span className="text-sm font-bold text-purple-600 uppercase tracking-wider">Før timen (i systemet)</span><h3 className="text-xl font-bold mt-1">Svar synlig i DIPS / Journalsystem</h3><p className="text-gray-600 mt-2">Svarene gjøres synlige direkte i eksisterende systemer. Det kreves ingen separat innlogging for behandler (hindrer merarbeid og sikrer informasjonsflyt). Praktiske behov sendes til sekretær, klinisk informasjon til lege.</p></div></div>
+                    <div className="relative"><div className="absolute -left-10 md:-left-14 bg-red-500 h-6 w-6 rounded-full border-4 border-white shadow"></div><div className="pl-4"><span className="text-sm font-bold text-red-600 uppercase tracking-wider">Samme dag (Ankomst)</span><h3 className="text-xl font-bold mt-1">Mottak og praktisk sortering</h3><p className="text-gray-600 mt-2 mb-4">Sekretær håndterer resepter og behov for tolk i skranken, basert på pasientens avkrysninger.</p><div className="bg-red-50 p-4 border-l-4 border-red-500 rounded text-red-800"><strong>Hva skjer ved manglende svar?</strong><br/>Pasienten tilbys hjelp til utfylling eller et nettbrett på venterommet. Dersom skjema fortsatt ikke fylles ut, gjennomføres timen som normalt. Systemet skal aldri skape en barriere for å få helsehjelp.</div></div></div>
+                    <div className="relative"><div className="absolute -left-10 md:-left-14 bg-green-600 h-6 w-6 rounded-full border-4 border-white shadow"></div><div className="pl-4"><span className="text-sm font-bold text-green-600 uppercase tracking-wider">Under konsultasjonen</span><h3 className="text-xl font-bold mt-1">Målrettet og forberedt behandler</h3><p className="text-gray-600 mt-2">Behandler bruker 1 minutt på å se over svarene før pasienten tas inn. Samtalen blir målrettet fra første minutt. Teknologien støtter den kliniske hverdagen og gir behandleren mer tid til selve pasienten.</p></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
